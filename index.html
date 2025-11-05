@@ -1,0 +1,113 @@
+/*
+  VisitCard.jsx
+  React single-file component (export default) that uses a runtime image path so the build won't fail
+  if the image file isn't present during bundling.
+
+  Notes:
+  - Do NOT import the GIF at build time. Instead the component references '/77gj.gif' (place the file
+    into your public/static root) or any external URL. That avoids the "file not found" build error.
+  - If the image fails to load, a simple text logo is shown instead.
+  - Popups remain state-driven and animated.
+*/
+
+import React, { useState, useEffect } from 'react';
+
+export default function VisitCard() {
+  const [openPopup, setOpenPopup] = useState(null); // 'work' | 'promotions' | null
+  const [showImage, setShowImage] = useState(true);
+
+  // Use a runtime path for the logo. Place 77gj.gif in your public folder (or change path to your hosted URL).
+  const logoSrc = typeof window !== 'undefined' ? '/77gj.gif' : '/77gj.gif';
+
+  useEffect(() => {
+    // lock scrolling while popup open
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = openPopup ? 'hidden' : prev;
+    return () => { document.body.style.overflow = prev; };
+  }, [openPopup]);
+
+  return (
+    <div className="visit-card-root" style={{ background: '#0b0b0b', minHeight: '100vh', color: '#fff', fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}>
+
+      <style>{`
+        :root { --accent: #d6b400; --dark-brown: #3a1e08; }
+        .vc-container { display:flex; flex-direction:column; align-items:center; padding:24px 16px 64px; }
+        .vc-logo, .vc-logo-bottom { width:auto; max-width:220px; height:auto; margin:20px auto; }
+        .vc-logo img, .vc-logo-bottom img { width:100%; height:auto; display:block; filter:drop-shadow(0 6px 18px rgba(0,0,0,0.5)); }
+        .vc-textlogo { width:140px; height:140px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:var(--accent); color:#0b0b0b; font-weight:800; font-size:18px; }
+        .vc-desc { max-width:540px; color:#d9d9d9; margin:18px 0 28px; text-align:center; }
+        .vc-menu { display:flex; flex-direction:column; gap:14px; width:100%; max-width:420px; }
+        .vc-btn { padding:14px 18px; font-size:16px; font-weight:600; border-radius:999px; border:0; cursor:pointer; background:linear-gradient(90deg,var(--dark-brown) 0%, var(--accent) 100%); color:#0b0b0b; transition:transform .18s ease, opacity .18s ease; }
+        .vc-btn:hover { transform:scale(1.02); opacity:.92; }
+        .vc-footer-note { margin-top:28px; color:#aaa; font-size:14px; }
+
+        .vc-popup-root { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.0); opacity:0; pointer-events:none; transition:opacity .25s ease, background .25s ease; z-index:999; }
+        .vc-popup-root.open { background:rgba(0,0,0,0.6); opacity:1; pointer-events:auto; }
+        .vc-popup-panel { background:var(--dark-brown); color:#fff; border-radius:12px; width:90%; max-width:420px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.6); transform:translateY(8px) scale(0.98); transition:transform .28s cubic-bezier(.2,.9,.3,1), opacity .28s ease; opacity:0; position:relative; }
+        .vc-popup-root.open .vc-popup-panel { transform:translateY(0) scale(1); opacity:1; }
+        .vc-popup-title { color:var(--accent); margin:0 0 8px 0; font-size:20px; }
+        .vc-popup-close { position:absolute; right:12px; top:10px; background:none; border:0; color:var(--accent); font-size:18px; cursor:pointer; }
+        .vc-popup-content { color:#f1f1f1; line-height:1.45; }
+
+        @media (max-width:600px) {
+          .vc-logo, .vc-logo-bottom { max-width:160px; }
+          .vc-textlogo { width:120px; height:120px; font-size:16px; }
+          .vc-btn { padding:12px 14px; font-size:15px; }
+        }
+      `}</style>
+
+      <div className="vc-container">
+        <div className="vc-logo" aria-hidden>
+          {showImage ? (
+            <img src={logoSrc} alt="Site logo" onError={() => setShowImage(false)} />
+          ) : (
+            <div className="vc-textlogo">LOGO</div>
+          )}
+        </div>
+
+        <div className="vc-desc">Welcome to my personal website! Here you can explore my work, projects, and promotions.</div>
+
+        <div className="vc-menu" role="navigation" aria-label="Main menu">
+          <button className="vc-btn" type="button" onClick={() => alert('Bot clicked')}>Bot</button>
+          <button className="vc-btn" type="button" onClick={() => alert('Chat clicked')}>Chat</button>
+          <button className="vc-btn" type="button" onClick={() => alert('Web 1.0 clicked')}>Web 1.0</button>
+          <button className="vc-btn" type="button" onClick={() => setOpenPopup('work')}>Work</button>
+          <button className="vc-btn" type="button" onClick={() => setOpenPopup('promotions')}>Promotions</button>
+        </div>
+
+        <div className="vc-footer-note">Every 7th order = $50 | Every feedback = $1</div>
+
+        <div style={{ height: 18 }} />
+
+        <div className="vc-logo-bottom" aria-hidden>
+          {showImage ? (
+            <img src={logoSrc} alt="Bottom logo" onError={() => setShowImage(false)} />
+          ) : (
+            <div className="vc-textlogo">LOGO</div>
+          )}
+        </div>
+      </div>
+
+      <div className={`vc-popup-root ${openPopup ? 'open' : ''}`} role="dialog" aria-modal={openPopup ? 'true' : 'false'} onClick={() => setOpenPopup(null)}>
+        <div className="vc-popup-panel" onClick={(e) => e.stopPropagation()}>
+          <button className="vc-popup-close" aria-label="Close popup" onClick={() => setOpenPopup(null)}>✖</button>
+
+          {openPopup === 'work' && (
+            <div>
+              <h3 className="vc-popup-title">Work Info</h3>
+              <div className="vc-popup-content">Here’s where you can describe your work or services in detail. Add links or images if needed.</div>
+            </div>
+          )}
+
+          {openPopup === 'promotions' && (
+            <div>
+              <h3 className="vc-popup-title">Promotions</h3>
+              <div className="vc-popup-content">Details about your current promotions or discounts go here.</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  );
+}
