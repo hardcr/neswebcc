@@ -1,113 +1,164 @@
-/*
-  VisitCard.jsx
-  React single-file component (export default) that uses a runtime image path so the build won't fail
-  if the image file isn't present during bundling.
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Visit Card</title>
+  <meta name="description" content="Simple visit-card page — dark theme with neon yellow accents." />
+  <style>
+    :root{
+      --bg:#0b0b0b;
+      --text:#fff;
+      --accent:#d6b400; /* dirty neon yellow */
+      --dark-brown:#3a1e08;
+      --muted:#bfbfbf;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:28px 16px;
+    }
 
-  Notes:
-  - Do NOT import the GIF at build time. Instead the component references '/77gj.gif' (place the file
-    into your public/static root) or any external URL. That avoids the "file not found" build error.
-  - If the image fails to load, a simple text logo is shown instead.
-  - Popups remain state-driven and animated.
-*/
+    .card{
+      width:100%;
+      max-width:720px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:18px;
+    }
 
-import React, { useState, useEffect } from 'react';
+    /* Logo (uses image if present, falls back to text box) */
+    .logo-wrap{width:220px;max-width:80%;}
+    .logo-img{width:100%;height:auto;display:block;border-radius:12px;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.6));}
+    .logo-fallback{width:160px;height:80px;border-radius:10px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800}
 
-export default function VisitCard() {
-  const [openPopup, setOpenPopup] = useState(null); // 'work' | 'promotions' | null
-  const [showImage, setShowImage] = useState(true);
+    .desc{max-width:600px;text-align:center;color:var(--muted);line-height:1.4;padding:0 8px}
 
-  // Use a runtime path for the logo. Place 77gj.gif in your public folder (or change path to your hosted URL).
-  const logoSrc = typeof window !== 'undefined' ? '/77gj.gif' : '/77gj.gif';
+    .menu{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;margin-top:6px}
 
-  useEffect(() => {
-    // lock scrolling while popup open
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = openPopup ? 'hidden' : prev;
-    return () => { document.body.style.overflow = prev; };
-  }, [openPopup]);
+    .menu a,.menu button{appearance:none;border:0;cursor:pointer;padding:14px 18px;border-radius:999px;font-weight:700;font-size:16px;color:var(--bg);background:linear-gradient(90deg,var(--dark-brown) 0%,var(--accent) 100%);box-shadow:0 10px 30px rgba(0,0,0,0.6);text-decoration:none;text-align:center}
+    .menu a:hover,.menu button:hover{transform:translateY(-3px);opacity:0.95}
 
-  return (
-    <div className="visit-card-root" style={{ background: '#0b0b0b', minHeight: '100vh', color: '#fff', fontFamily: "'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial" }}>
+    .note{color:#9da6ad;margin-top:8px;font-size:14px}
 
-      <style>{`
-        :root { --accent: #d6b400; --dark-brown: #3a1e08; }
-        .vc-container { display:flex; flex-direction:column; align-items:center; padding:24px 16px 64px; }
-        .vc-logo, .vc-logo-bottom { width:auto; max-width:220px; height:auto; margin:20px auto; }
-        .vc-logo img, .vc-logo-bottom img { width:100%; height:auto; display:block; filter:drop-shadow(0 6px 18px rgba(0,0,0,0.5)); }
-        .vc-textlogo { width:140px; height:140px; display:flex; align-items:center; justify-content:center; border-radius:12px; background:var(--accent); color:#0b0b0b; font-weight:800; font-size:18px; }
-        .vc-desc { max-width:540px; color:#d9d9d9; margin:18px 0 28px; text-align:center; }
-        .vc-menu { display:flex; flex-direction:column; gap:14px; width:100%; max-width:420px; }
-        .vc-btn { padding:14px 18px; font-size:16px; font-weight:600; border-radius:999px; border:0; cursor:pointer; background:linear-gradient(90deg,var(--dark-brown) 0%, var(--accent) 100%); color:#0b0b0b; transition:transform .18s ease, opacity .18s ease; }
-        .vc-btn:hover { transform:scale(1.02); opacity:.92; }
-        .vc-footer-note { margin-top:28px; color:#aaa; font-size:14px; }
+    .logo-bottom{margin-top:20px;width:160px;max-width:70%}
+    .logo-bottom img{width:100%;height:auto;display:block;border-radius:10px}
 
-        .vc-popup-root { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.0); opacity:0; pointer-events:none; transition:opacity .25s ease, background .25s ease; z-index:999; }
-        .vc-popup-root.open { background:rgba(0,0,0,0.6); opacity:1; pointer-events:auto; }
-        .vc-popup-panel { background:var(--dark-brown); color:#fff; border-radius:12px; width:90%; max-width:420px; padding:20px; box-shadow:0 8px 30px rgba(0,0,0,0.6); transform:translateY(8px) scale(0.98); transition:transform .28s cubic-bezier(.2,.9,.3,1), opacity .28s ease; opacity:0; position:relative; }
-        .vc-popup-root.open .vc-popup-panel { transform:translateY(0) scale(1); opacity:1; }
-        .vc-popup-title { color:var(--accent); margin:0 0 8px 0; font-size:20px; }
-        .vc-popup-close { position:absolute; right:12px; top:10px; background:none; border:0; color:var(--accent); font-size:18px; cursor:pointer; }
-        .vc-popup-content { color:#f1f1f1; line-height:1.45; }
+    /* Popup */
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0);opacity:0;pointer-events:none;transition:background .22s ease,opacity .22s ease;z-index:100}
+    .overlay.show{background:rgba(0,0,0,0.6);opacity:1;pointer-events:auto}
 
-        @media (max-width:600px) {
-          .vc-logo, .vc-logo-bottom { max-width:160px; }
-          .vc-textlogo { width:120px; height:120px; font-size:16px; }
-          .vc-btn { padding:12px 14px; font-size:15px; }
-        }
-      `}</style>
+    .modal{background:linear-gradient(180deg,var(--dark-brown),#2a1206);padding:18px;border-radius:12px;width:92%;max-width:420px;color:var(--text);box-shadow:0 20px 80px rgba(0,0,0,0.6);transform:translateY(10px) scale(.98);opacity:0;transition:transform .26s cubic-bezier(.2,.9,.3,1),opacity .24s ease}
+    .overlay.show .modal{transform:translateY(0) scale(1);opacity:1}
 
-      <div className="vc-container">
-        <div className="vc-logo" aria-hidden>
-          {showImage ? (
-            <img src={logoSrc} alt="Site logo" onError={() => setShowImage(false)} />
-          ) : (
-            <div className="vc-textlogo">LOGO</div>
-          )}
-        </div>
+    .modal h3{margin:0 0 8px 0;color:var(--accent)}
+    .modal p{margin:0;color:#e6e6e6;line-height:1.45}
 
-        <div className="vc-desc">Welcome to my personal website! Here you can explore my work, projects, and promotions.</div>
+    .close-btn{position:absolute;right:14px;top:12px;background:none;border:0;color:var(--accent);font-size:18px;cursor:pointer}
 
-        <div className="vc-menu" role="navigation" aria-label="Main menu">
-          <button className="vc-btn" type="button" onClick={() => alert('Bot clicked')}>Bot</button>
-          <button className="vc-btn" type="button" onClick={() => alert('Chat clicked')}>Chat</button>
-          <button className="vc-btn" type="button" onClick={() => alert('Web 1.0 clicked')}>Web 1.0</button>
-          <button className="vc-btn" type="button" onClick={() => setOpenPopup('work')}>Work</button>
-          <button className="vc-btn" type="button" onClick={() => setOpenPopup('promotions')}>Promotions</button>
-        </div>
+    /* small screens */
+    @media (max-width:520px){
+      .menu a,.menu button{font-size:15px;padding:12px 14px}
+      .logo-wrap{max-width:90%}
+    }
+  </style>
+</head>
+<body>
 
-        <div className="vc-footer-note">Every 7th order = $50 | Every feedback = $1</div>
-
-        <div style={{ height: 18 }} />
-
-        <div className="vc-logo-bottom" aria-hidden>
-          {showImage ? (
-            <img src={logoSrc} alt="Bottom logo" onError={() => setShowImage(false)} />
-          ) : (
-            <div className="vc-textlogo">LOGO</div>
-          )}
-        </div>
-      </div>
-
-      <div className={`vc-popup-root ${openPopup ? 'open' : ''}`} role="dialog" aria-modal={openPopup ? 'true' : 'false'} onClick={() => setOpenPopup(null)}>
-        <div className="vc-popup-panel" onClick={(e) => e.stopPropagation()}>
-          <button className="vc-popup-close" aria-label="Close popup" onClick={() => setOpenPopup(null)}>✖</button>
-
-          {openPopup === 'work' && (
-            <div>
-              <h3 className="vc-popup-title">Work Info</h3>
-              <div className="vc-popup-content">Here’s where you can describe your work or services in detail. Add links or images if needed.</div>
-            </div>
-          )}
-
-          {openPopup === 'promotions' && (
-            <div>
-              <h3 className="vc-popup-title">Promotions</h3>
-              <div className="vc-popup-content">Details about your current promotions or discounts go here.</div>
-            </div>
-          )}
-        </div>
-      </div>
-
+  <main class="card" role="main">
+    <div class="logo-wrap" id="logoTop">
+      <!-- place 77gj.gif next to this HTML file in the repo or in your public root -->
+      <img src="77gj.gif" alt="logo" class="logo-img" id="logoImgTop" onerror="handleLogoError(event)" />
     </div>
-  );
-}
+
+    <p class="desc">Welcome — compact visit-card style page. Use the buttons below to navigate or open quick popups for more info. Designed for dark theme with neon-yellow accents.</p>
+
+    <nav class="menu" aria-label="Main menu">
+      <a href="https://example.com" target="_blank" rel="noopener noreferrer">Bot</a>
+      <a href="https://example.com" target="_blank" rel="noopener noreferrer">Chat</a>
+      <a href="https://example.com" target="_blank" rel="noopener noreferrer">Web 1.0</a>
+      <button type="button" id="workBtn">Work</button>
+      <button type="button" id="promoBtn">Promotions</button>
+    </nav>
+
+    <div class="note">Every 7th order = $50 | Every feedback = $1</div>
+
+    <div class="logo-bottom" id="logoBottom">
+      <img src="77gj.gif" alt="logo bottom" class="logo-img" id="logoImgBottom" onerror="handleLogoError(event)" />
+    </div>
+  </main>
+
+  <!-- Popups -->
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="close-btn" id="closeModal" aria-label="Close">✖</button>
+      <h3 id="modalTitle">Title</h3>
+      <p id="modalText">Content…</p>
+    </div>
+  </div>
+
+  <script>
+    // graceful fallback when logo image not available: replace with text block
+    function handleLogoError(e){
+      const img = e.target;
+      const parent = img.parentElement;
+      if(!parent) return;
+      // prevent infinite loop
+      img.style.display = 'none';
+      const box = document.createElement('div');
+      box.className = 'logo-fallback';
+      box.textContent = 'LOGO';
+      parent.appendChild(box);
+    }
+
+    // Popup controls
+    const overlay = document.getElementById('overlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalText = document.getElementById('modalText');
+    const workBtn = document.getElementById('workBtn');
+    const promoBtn = document.getElementById('promoBtn');
+    const closeModal = document.getElementById('closeModal');
+
+    function openModal(title, text){
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      overlay.classList.add('show');
+      overlay.setAttribute('aria-hidden','false');
+      // lock scroll
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModalFn(){
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden','true');
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+
+    workBtn.addEventListener('click', function(){
+      openModal('Work Info', 'Here\'s where you can describe your work or services in detail. Add links or images if needed.');
+    });
+
+    promoBtn.addEventListener('click', function(){
+      openModal('Promotions', 'Details about your current promotions or discounts go here. Example: 10% off first order — use code VISIT10.');
+    });
+
+    closeModal.addEventListener('click', closeModalFn);
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) closeModalFn(); });
+
+    // Accessibility: close on ESC
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && overlay.classList.contains('show')) closeModalFn(); });
+  </script>
+</body>
+</html>
