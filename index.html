@@ -19,9 +19,11 @@
       --muted:#a0a0a0;
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-x:hidden}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-x:hidden;position:relative}
 
-    .card{width:100%;max-width:720px;display:flex;flex-direction:column;align-items:center;gap:20px}
+    #matrix-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0.45}
+
+    .card{position:relative;z-index:1;width:100%;max-width:720px;display:flex;flex-direction:column;align-items:center;gap:20px}
     .logo-wrap{width:220px;max-width:80%}
     .logo-img{width:100%;height:auto;border-radius:16px;filter:drop-shadow(0 8px 24px rgba(0,255,157,0.25))}
     .logo-fallback{width:160px;height:80px;border-radius:12px;background:linear-gradient(135deg,var(--primary-green),var(--secondary-green));color:var(--choco-dark);display:flex;align-items:center;justify-content:center;font-weight:900;letter-spacing:2px}
@@ -105,27 +107,12 @@
       transform:translateY(-2px) scale(1.01);
     }
 
-    /* Floating image */
-    .floating-img{
-      position:absolute;
-      width:80px;
-      height:auto;
-      pointer-events:none;
-      opacity:0;
-      transform:translate(-50%,-50%) scale(0.9);
-      filter:drop-shadow(0 12px 24px rgba(0,255,157,0.3));
-      transition:opacity .3s ease,transform .3s ease;
-      border-radius:12px;
-    }
-    .floating-img.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-
     @media(max-width:520px){
       .menu a,.menu button{font-size:16px;padding:18px 22px}
-      .floating-img{width:64px}
     }
 
     /* Modal – updated colors */
-    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);opacity:0;pointer-events:none;transition:all .3s;z-index:100}
+    .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);opacity:0;pointer-events:none;transition:all .3s;z-index:200}
     .overlay.show{opacity:1;pointer-events:auto}
     .modal{
       background:linear-gradient(135deg,rgba(45,24,8,0.95),rgba(10,10,10,0.95));
@@ -148,6 +135,8 @@
   </style>
 </head>
 <body>
+
+  <canvas id="matrix-bg" aria-hidden="true"></canvas>
 
   <main class="card" id="card">
     <div class="logo-wrap" id="logoTop">
@@ -183,8 +172,6 @@
         <span>PROMO</span>
       </button>
     </nav>
-
-    <img src="photo_2025-11-06 07.01.13.jpeg" alt="floating" id="floatingImg" class="floating-img" onerror="this.style.display='none'" />
   </main>
 
   <div class="overlay" id="overlay" aria-hidden="true">
@@ -219,28 +206,44 @@
     overlay.onclick=e=>e.target===overlay&&closeModalFn();
     document.onkeydown=e=>e.key==='Escape'&&overlay.classList.contains('show')&&closeModalFn();
 
-    // Floating image (unchanged)
+    // Matrix rain: "nestle" columns (background)
     (function(){
-      const img=document.getElementById('floatingImg'),card=document.getElementById('card');
-      if(!img||!card)return;
-      let running=true;
-      const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
-      function show(){
-        const r=card.getBoundingClientRect();
-        const x=rand(40,r.width-40), y=rand(40,r.height-40);
-        img.style.left=(r.left+x)+'px';
-        img.style.top=(r.top+y)+'px';
-        img.classList.add('show');
-        setTimeout(()=>img.classList.remove('show'),rand(1400,3500));
+      const canvas=document.getElementById('matrix-bg');
+      if(!canvas)return;
+      const ctx=canvas.getContext('2d');
+      const letters='nestle'.split('');
+      const fontSize=15;
+      let w=0,h=0,dpr=1,cols=0,colW=0;
+      const drops=[];
+
+      function resize(){
+        dpr=window.devicePixelRatio||1;
+        w=canvas.width=Math.floor(window.innerWidth*dpr);
+        h=canvas.height=Math.floor(window.innerHeight*dpr);
+        colW=fontSize*dpr;
+        cols=Math.ceil(w/colW);
+        while(drops.length<cols)drops.push(Math.random()*-100);
+        drops.length=cols;
       }
-      function loop(){if(running){show();setTimeout(loop,rand(2500,7000))}}
-      setTimeout(loop,1200);
-      const pause=()=>{running=false;img.classList.remove('show')};
-      const resume=()=>{if(!running){running=true;setTimeout(loop,800)}};
-      card.addEventListener('mouseenter',pause);
-      card.addEventListener('mouseleave',resume);
-      card.addEventListener('touchstart',pause);
-      card.addEventListener('touchend',resume);
+      resize();
+      window.addEventListener('resize',resize);
+
+      function draw(){
+        ctx.fillStyle='rgba(10,10,10,0.12)';
+        ctx.fillRect(0,0,w,h);
+        ctx.font=`${colW}px ui-monospace,Consolas,monospace`;
+        ctx.textBaseline='top';
+        for(let i=0;i<cols;i++){
+          const ch=letters[(Math.random()*letters.length)|0];
+          const x=i*colW;
+          const y=drops[i]*colW;
+          ctx.fillStyle=Math.random()<0.08?'#d4fff0':'#00cc7a';
+          ctx.fillText(ch,x,y);
+          if(y>h&&Math.random()>0.98)drops[i]=0;
+          else drops[i]+=0.4+Math.random()*0.5;
+        }
+      }
+      setInterval(draw,48);
     })();
   </script>
 </body>
